@@ -12,6 +12,7 @@
 	<modules>
 		<module>pheidippides-artifacts</module>
 		<module>pheidippides-repository</module>
+		<module>pheidippides-runner</module>
 	</modules>
 
 	<build>

@@ -16,9 +16,7 @@ import koncept.pheidippides.ArtifactDescriptor;
 import koncept.pheidippides.ArtifactResource;
 import koncept.pheidippides.ResolvedArtifact;
 
-import org.xml.sax.helpers.DefaultHandler;
-
-public class MavenPomDescriptor extends DefaultHandler implements ResolvedArtifact {
+public class MavenPomDescriptor implements ResolvedArtifact {
 	private static XMLInputFactory fac = XMLInputFactory.newInstance();
 	
 	private final URI location;
@@ -106,7 +104,7 @@ public class MavenPomDescriptor extends DefaultHandler implements ResolvedArtifa
 		String artifactId = null;
 		String version = null;
 		
-		while (reader.hasNext()) {
+		while (reader.hasNext() && depth >= 0) {
 			int eventId = reader.next();
 			switch (eventId) {
 			case XMLStreamConstants.START_ELEMENT:
@@ -133,7 +131,7 @@ public class MavenPomDescriptor extends DefaultHandler implements ResolvedArtifa
 	private List<String> readModules(XMLStreamReader reader) throws XMLStreamException {
 		List<String> modules = new ArrayList<String>();
 		int depth = 0;
-		while (reader.hasNext()) {
+		while (reader.hasNext() && depth >= 0) {
 			int eventId = reader.next();
 			switch (eventId) {
 			case XMLStreamConstants.START_ELEMENT:

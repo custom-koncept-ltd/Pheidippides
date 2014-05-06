@@ -29,4 +29,16 @@ public interface Repository {
 	 */
 	public ResolvedArtifact resolvePath(String relativePath);
 	
+	/**
+	 * @return true if the repository is listable, false if it is not
+	 */
+	public boolean isListableRepository();
+	
+	/**
+	 * use this (rather than casting) to get the ListableRepository
+	 * @return
+	 */
+	public ListableRepository getListableRepository();
+	
+	
 }

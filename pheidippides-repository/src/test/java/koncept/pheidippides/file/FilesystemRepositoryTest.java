@@ -11,8 +11,8 @@ import java.net.URL;
 import java.util.List;
 
 import koncept.pheidippides.ArtifactDescriptor;
+import koncept.pheidippides.LocationListing;
 import koncept.pheidippides.ResolvedArtifact;
-import koncept.pheidippides.SearchLocation;
 
 import org.junit.Test;
 
@@ -28,11 +28,11 @@ public class FilesystemRepositoryTest {
 	@Test
 	public void singleRootIsEmptyAndSearchable() {
 		FilesystemRepository fsr = testResourcesRepository();
-		List<SearchLocation> rootSearchLocations = fsr.getRootSearchLocation();
+		List<LocationListing> rootSearchLocations = fsr.getRootSearchLocation();
 		assertThat(rootSearchLocations.size(), is(1));
-		SearchLocation rootSearch = rootSearchLocations.get(0);
+		LocationListing rootSearch = rootSearchLocations.get(0);
 		
-		List<ResolvedArtifact> artifacts = rootSearch.getArtifacts();
+		List<ArtifactDescriptor> artifacts = rootSearch.getArtifactDescriptors();
 		assertNotNull(artifacts);
 		
 		assertTrue(artifacts.isEmpty()); //no artifacts at root level.

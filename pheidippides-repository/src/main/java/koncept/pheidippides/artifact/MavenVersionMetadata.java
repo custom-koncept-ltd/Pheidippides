@@ -7,6 +7,7 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import javax.xml.stream.XMLInputFactory;
 import javax.xml.stream.XMLStreamConstants;
@@ -16,15 +17,14 @@ import javax.xml.stream.XMLStreamReader;
 import koncept.pheidippides.ArtifactDescriptor;
 import koncept.pheidippides.ArtifactResource;
 
-import org.xml.sax.helpers.DefaultHandler;
-
-public class MavenVersionMetadata extends DefaultHandler {
+public class MavenVersionMetadata {
 	private static XMLInputFactory fac = XMLInputFactory.newInstance();
 	
 	private final URI location;
 	
 	private ArtifactDescriptor descriptor;
 	private Map<String, String> substituteVersionSuffixes = new HashMap<String, String>();
+	private long lastUpdated = 0L;
 	
 	public MavenVersionMetadata(URI location, InputStream in) throws XMLStreamException  {
 		this.location = location;
@@ -44,6 +44,14 @@ public class MavenVersionMetadata extends DefaultHandler {
 	public String getSubstituteVersionSuffixToUse(String artifactType) {
 		String suffix = substituteVersionSuffixes.get(artifactType);
 		return suffix == null ? descriptor.getVersion() : suffix;
+	}
+	
+	public Set<String> getKnownArtifactTypes() {
+		return substituteVersionSuffixes.keySet();
+	}
+	
+	public long getLastTimestamp() {
+		return lastUpdated;
 	}
 	
 	
@@ -78,7 +86,8 @@ public class MavenVersionMetadata extends DefaultHandler {
 		
 		if (descriptor != null && version == null) 
 			version = descriptor.getVersion();
-		descriptor = new ArtifactDescriptor(groupId, artifactId, version);
+		if (groupId != null && artifactId != null && version != null)
+			descriptor = new ArtifactDescriptor(groupId, artifactId, version);
 	}
 	
 	private void readVersioning(XMLStreamReader reader) throws XMLStreamException {
@@ -102,6 +111,9 @@ public class MavenVersionMetadata extends DefaultHandler {
 				depth--;
 				break;
 			}
+		}
+		if (lastUpdated != null) {
+			this.lastUpdated = new Long(lastUpdated.replaceAll("\\.", ""));
 		}
 	}
 	
@@ -203,7 +215,7 @@ public class MavenVersionMetadata extends DefaultHandler {
 	private List<String> readModules(XMLStreamReader reader) throws XMLStreamException {
 		List<String> modules = new ArrayList<String>();
 		int depth = 0;
-		while (reader.hasNext()) {
+		while (reader.hasNext() && depth >= 0) {
 			int eventId = reader.next();
 			switch (eventId) {
 			case XMLStreamConstants.START_ELEMENT:

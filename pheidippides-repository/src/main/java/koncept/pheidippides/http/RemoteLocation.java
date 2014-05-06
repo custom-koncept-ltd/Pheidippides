@@ -1,6 +1,6 @@
 package koncept.pheidippides.http;
 
-import koncept.pheidippides.SearchableRepository;
+import koncept.pheidippides.ListableRepository;
 
 public class RemoteLocation { //implements SearchableRepository {
 

@@ -8,12 +8,12 @@ import java.util.Collections;
 import java.util.List;
 
 import koncept.pheidippides.ArtifactDescriptor;
+import koncept.pheidippides.ListableRepository;
+import koncept.pheidippides.LocationListing;
 import koncept.pheidippides.ResolvedArtifact;
-import koncept.pheidippides.SearchLocation;
-import koncept.pheidippides.SearchableRepository;
 import koncept.pheidippides.artifact.MavenPomDescriptor;
 
-public class FilesystemRepository implements SearchableRepository {
+public class FilesystemRepository implements ListableRepository {
 
 	private final File root;
 	
@@ -34,9 +34,9 @@ public class FilesystemRepository implements SearchableRepository {
 		return root.toURI();
 	}
 	
-	public List<SearchLocation> getRootSearchLocation() {
+	public List<LocationListing> getRootSearchLocation() {
 		if (root.exists() && root.isDirectory()) {
-			return Arrays.asList((SearchLocation)new FileSearchLocation(root));
+			return Arrays.asList((LocationListing)new FileSearchLocation(null, root));
 		}
 		return Collections.emptyList();
 	}
@@ -53,6 +53,14 @@ public class FilesystemRepository implements SearchableRepository {
 			return null;
 //			return new FileSearchLocation(artifact).getArtifact();
 		return null;
+	}
+	
+	public boolean isListableRepository() {
+		return true;
+	}
+	
+	public ListableRepository getListableRepository() {
+		return this;
 	}
 	
 	public ResolvedArtifact resolveChildModule(ArtifactDescriptor descriptor, String modulePath) {
