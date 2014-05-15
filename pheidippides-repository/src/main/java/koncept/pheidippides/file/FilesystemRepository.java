@@ -2,18 +2,20 @@ package koncept.pheidippides.file;
 
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.net.URI;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.List;
+
+import javax.xml.stream.XMLStreamException;
 
 import koncept.pheidippides.ArtifactDescriptor;
-import koncept.pheidippides.ListableRepository;
-import koncept.pheidippides.LocationListing;
-import koncept.pheidippides.ResolvedArtifact;
+import koncept.pheidippides.ArtifactLister;
+import koncept.pheidippides.ArtifactResolutionPoint;
+import koncept.pheidippides.Repository;
+import koncept.pheidippides.artifact.DefaultArtifactResolutionPoint;
 import koncept.pheidippides.artifact.MavenPomDescriptor;
+import koncept.pheidippides.listing.LocationListing;
 
-public class FilesystemRepository implements ListableRepository {
+public class FilesystemRepository implements Repository, ArtifactLister {
 
 	private final File root;
 	
@@ -34,47 +36,55 @@ public class FilesystemRepository implements ListableRepository {
 		return root.toURI();
 	}
 	
-	public List<LocationListing> getRootSearchLocation() {
+	public LocationListing getRootSearchLocation() {
 		if (root.exists() && root.isDirectory()) {
-			return Arrays.asList((LocationListing)new FileSearchLocation(null, root));
+			return (LocationListing) new FileSearchLocation(null, root);
 		}
-		return Collections.emptyList();
+		return null;
 	}
 	
-	public ResolvedArtifact resolve(ArtifactDescriptor descriptor) {
-		String groupId = descriptor.getGroupId().replace('.', '/');
-		
-		File artifact = new File(root,
-				groupId + "/"
-						+ descriptor.getArtifactId() + "/"
-						+ descriptor.getVersion());
-		
-		if (artifact.exists())
+	public LocationListing getSearchLocation(String repositoryPath) {
+		if (!repositoryPath.startsWith("/"))
+			throw new RuntimeException("repository paths must be absolute");
+		String [] parts = repositoryPath.split("/");
+		FileSearchLocation location = new FileSearchLocation(null, root);
+		for(String part: parts) if (!part.equals("")) {
+			location = new FileSearchLocation(location, new File(location.getDir(), part));
+		}
+		if (!location.getDir().exists())
 			return null;
-//			return new FileSearchLocation(artifact).getArtifact();
-		return null;
+		return (LocationListing)location;
+	}
+	
+	public ArtifactResolutionPoint resolve(ArtifactDescriptor descriptor) {
+		try {
+			File dir = new File(root, descriptor.toPath());
+			File expectedPom = new File(dir, descriptor.getArtifactId() + "-" + descriptor.getVersion() + ".pom");
+			if (!expectedPom.exists() || !expectedPom.isFile())
+				throw new RuntimeException("Unable to resolve artifact " + descriptor);
+			MavenPomDescriptor pomDescriptor = new MavenPomDescriptor(expectedPom.toURI(), new FileInputStream(expectedPom));
+			
+			if (!descriptor.equals(pomDescriptor.getDescriptor()))
+				throw new RuntimeException("unexpected artifact descriptor: got " + pomDescriptor.getDescriptor() + " but expected " + descriptor);
+			return new DefaultArtifactResolutionPoint(this, dir.toURI(), pomDescriptor);
+		} catch (FileNotFoundException e) {
+			throw new RuntimeException(e);
+		} catch (XMLStreamException e) {
+			throw new RuntimeException(e);
+		}
 	}
 	
 	public boolean isListableRepository() {
 		return true;
 	}
 	
-	public ListableRepository getListableRepository() {
+	public ArtifactLister getArtifactLister() {
 		return this;
 	}
 	
-	public ResolvedArtifact resolveChildModule(ArtifactDescriptor descriptor, String modulePath) {
+	public ArtifactResolutionPoint resolveChildModule(ArtifactDescriptor descriptor, String modulePath) {
 		// TODO Auto-generated method stub
 		return null;
 	}
-	
-	public ResolvedArtifact resolvePath(String relativePath) {
-		File file = new File(root, relativePath);
-		if (file.exists() && file.isFile()) try {
-			return new MavenPomDescriptor(file.toURI(), new FileInputStream(file));
-		} catch (Exception e) {
-			throw new RuntimeException(e);
-		}
-		return null;
-	}
+
 }

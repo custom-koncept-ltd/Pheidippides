@@ -8,15 +8,17 @@ import java.io.FilenameFilter;
 import java.io.IOException;
 import java.net.URI;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Properties;
 
 import javax.xml.stream.XMLStreamException;
 
 import koncept.pheidippides.ArtifactDescriptor;
-import koncept.pheidippides.LocationListing;
 import koncept.pheidippides.artifact.MavenPomDescriptor;
 import koncept.pheidippides.artifact.MavenVersionMetadata;
+import koncept.pheidippides.listing.ContentListing;
+import koncept.pheidippides.listing.LocationListing;
 
 public class FileSearchLocation implements LocationListing {
 
@@ -47,15 +49,41 @@ public class FileSearchLocation implements LocationListing {
 		return null;
 	}
 	
-	public URI getListingLocation() {
+	public URI getLocation() {
 		return dir.toURI();
 	}
 	
-	public String getRepositoryPath() {
-		if (parent == null) return "/"; //will be the special case parent
-		return parent.getRepositoryPath() + dir.getName() + "/";
+	public File getDir() {
+		return dir;
 	}
 	
+	public String getListingPath() {
+		if (parent == null) return "/"; //will be the special case parent
+		return parent.getListingPath() + dir.getName() + "/";
+	}
+	
+	public List<String> listContents() {
+		List<String> fileNames = new ArrayList<String>();
+		File[] contents = dir.listFiles(new FileFilter() {
+			public boolean accept(File f) {
+				return f.isFile();
+			}
+		});
+		for(File f: contents) {
+			fileNames.add(f.getName());
+		}
+		Collections.sort(fileNames, String.CASE_INSENSITIVE_ORDER);
+		return fileNames;
+	}
+	
+	public ContentListing getContents(String name) {
+		File file = new File(dir, name);
+		if (file.exists())
+			return new FileContentListing(file);
+		return null;
+	}
+	
+	@Deprecated
 	public List<ArtifactDescriptor> getArtifactDescriptors() {
 		List<ArtifactDescriptor> artifacts = new ArrayList<ArtifactDescriptor>();
 		try {
@@ -101,7 +129,7 @@ public class FileSearchLocation implements LocationListing {
 					ArtifactDescriptor descriptor = meta.getArtifactDescriptor();
 					if (
 							descriptor != null && 
-							descriptor.toPath().equals(getRepositoryPath()) &&
+							descriptor.toPath().equals(getListingPath()) &&
 //							!artifacts.contains(descriptor)
 							true
 							) {

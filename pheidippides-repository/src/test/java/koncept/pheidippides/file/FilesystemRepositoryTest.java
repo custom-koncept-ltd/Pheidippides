@@ -1,9 +1,7 @@
 package koncept.pheidippides.file;
 
 
-import static org.hamcrest.CoreMatchers.is;
 import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
 
 import java.io.File;
@@ -11,8 +9,7 @@ import java.net.URL;
 import java.util.List;
 
 import koncept.pheidippides.ArtifactDescriptor;
-import koncept.pheidippides.LocationListing;
-import koncept.pheidippides.ResolvedArtifact;
+import koncept.pheidippides.listing.LocationListing;
 
 import org.junit.Test;
 
@@ -28,20 +25,20 @@ public class FilesystemRepositoryTest {
 	@Test
 	public void singleRootIsEmptyAndSearchable() {
 		FilesystemRepository fsr = testResourcesRepository();
-		List<LocationListing> rootSearchLocations = fsr.getRootSearchLocation();
-		assertThat(rootSearchLocations.size(), is(1));
-		LocationListing rootSearch = rootSearchLocations.get(0);
+		LocationListing rootSearchLocation = fsr.getRootSearchLocation();
+		assertNotNull(rootSearchLocation);
 		
-		List<ArtifactDescriptor> artifacts = rootSearch.getArtifactDescriptors();
+		List<ArtifactDescriptor> artifacts = rootSearchLocation.getArtifactDescriptors();
 		assertNotNull(artifacts);
 		
 		assertTrue(artifacts.isEmpty()); //no artifacts at root level.
 	}
 	
+	/*  the resolvePath method has been removed
 	@Test
 	public void resolvePath() {
 		FilesystemRepository fsr = testResourcesRepository();
-		ResolvedArtifact artifact = fsr.resolvePath("pom.xml");
+		ArtifactResolutionPoint artifact = fsr.resolvePath("pom.xml");
 		assertNotNull(artifact);
 		
 		ArtifactDescriptor descriptor = artifact.getDescriptor();
@@ -57,4 +54,5 @@ public class FilesystemRepositoryTest {
 		assertThat(descriptor.getArtifactId(), is("pheidippides-test-child"));
 		assertThat(descriptor.getVersion(), is("1.0-SNAPSHOT"));
 	}
+	*/
 }

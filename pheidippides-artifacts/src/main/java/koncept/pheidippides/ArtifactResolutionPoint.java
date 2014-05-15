@@ -1,15 +1,15 @@
 package koncept.pheidippides;
 
 import java.net.URI;
+import java.util.Collection;
 import java.util.List;
-import java.util.Map;
 
 /**
  * Resolved artifact - has parsed and processed the details
  * @author koncept
  *
  */
-public interface ResolvedArtifact {
+public interface ArtifactResolutionPoint {
 	
 	/**
 	 * @return the parent artifact descriptor, or null
@@ -26,13 +26,15 @@ public interface ResolvedArtifact {
 	 */
 	public List<String> getChildModules();
 	
+	/**
+	 * fully qualified resolution uri
+	 * @return
+	 */
 	public URI getResolvedLocation();
 	
 	/**
-	 * the resources MAY be keyed by classifier, 
-	 * or they MAY be keyed by file name (if applicable)
-	 * 
-	 * @return a map of artifact resources.
+	 * a collection of all of the downloadable artifacts for this artifact descriptor
+	 * @return
 	 */
-	public Map<String, ArtifactResource> getResources();
+	public Collection<ArtifactResource> getResources();
 }

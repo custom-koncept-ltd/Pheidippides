@@ -5,7 +5,6 @@ import java.net.URI;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
-import java.util.Map;
 
 import javax.xml.stream.XMLInputFactory;
 import javax.xml.stream.XMLStreamConstants;
@@ -13,10 +12,8 @@ import javax.xml.stream.XMLStreamException;
 import javax.xml.stream.XMLStreamReader;
 
 import koncept.pheidippides.ArtifactDescriptor;
-import koncept.pheidippides.ArtifactResource;
-import koncept.pheidippides.ResolvedArtifact;
 
-public class MavenPomDescriptor implements ResolvedArtifact {
+public class MavenPomDescriptor {
 	private static XMLInputFactory fac = XMLInputFactory.newInstance();
 	
 	private final URI location;
@@ -31,10 +28,10 @@ public class MavenPomDescriptor implements ResolvedArtifact {
 		XMLStreamReader reader = fac.createXMLStreamReader(in);
 		readXmlDoc(reader);
 		
-		List<String> validationErrors = validate();
-		if (!validationErrors.isEmpty()) {
-			throw new RuntimeException("Validation Error(s): " + validationErrors);
-		}
+//		List<String> validationErrors = validate();
+//		if (!validationErrors.isEmpty()) {
+//			throw new RuntimeException("Validation Error(s): " + validationErrors);
+//		}
 	}
 	
 	
@@ -150,12 +147,6 @@ public class MavenPomDescriptor implements ResolvedArtifact {
 		return modules;
 	}
 	
-	public List<String> validate() {
-		return Collections.emptyList();
-	}
-	
-	
-	
 	public ArtifactDescriptor getDescriptor() {
 		return descriptor;
 	}
@@ -171,11 +162,5 @@ public class MavenPomDescriptor implements ResolvedArtifact {
 	public URI getResolvedLocation() {
 		return location;
 	}
-	
-	public Map<String, ArtifactResource> getResources() {
-		// TODO Auto-generated method stub
-		return null;
-	}
-	
 
 }
