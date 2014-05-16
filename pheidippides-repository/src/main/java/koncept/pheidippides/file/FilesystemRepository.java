@@ -81,10 +81,5 @@ public class FilesystemRepository implements Repository, ArtifactLister {
 	public ArtifactLister getArtifactLister() {
 		return this;
 	}
-	
-	public ArtifactResolutionPoint resolveChildModule(ArtifactDescriptor descriptor, String modulePath) {
-		// TODO Auto-generated method stub
-		return null;
-	}
 
 }

@@ -15,14 +15,6 @@ public interface Repository {
 	public ArtifactResolutionPoint resolve(ArtifactDescriptor descriptor);
 	
 	/**
-	 * Attempts to resolve the given child artifact in this repository
-	 * @param descriptor
-	 * @param modulePath
-	 * @return the resolved artifact, or null
-	 */
-	public ArtifactResolutionPoint resolveChildModule(ArtifactDescriptor descriptor, String modulePath);
-	
-	/**
 	 * @return true if the repository is listable, false if it is not
 	 */
 	public boolean isListableRepository();

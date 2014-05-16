@@ -19,15 +19,28 @@ import org.junit.Test;
 
 public class HttpRepositoryIT {
 
+/*
+dump /koncept/http/koncept-legacy-mod/7/  http://repository.custom-koncept.co.uk/artifactory/public/koncept/http/koncept-legacy-mod/7/
+   - koncept-legacy-mod-7-sources.jar
+   - koncept-legacy-mod-7-sources.jar.md5
+   - koncept-legacy-mod-7-sources.jar.sha1
+   - koncept-legacy-mod-7.jar
+   - koncept-legacy-mod-7.jar.md5
+   - koncept-legacy-mod-7.jar.sha1
+   - koncept-legacy-mod-7.pom
+   - koncept-legacy-mod-7.pom.md5
+   - koncept-legacy-mod-7.pom.sha1
+ */
 	@Test
 	public void resolveFullyQualifiedArtifact() throws Exception {
 		HttpRepository repo = HttpRepository.konceptRepository();
-		ArtifactDescriptor descriptor = new ArtifactDescriptor("koncept.pheidippides", "pheidippides-artifacts", "1.0-SNAPSHOT");
+//		ArtifactDescriptor descriptor = new ArtifactDescriptor("koncept.pheidippides", "pheidippides-artifacts", "1.0-SNAPSHOT");
+		ArtifactDescriptor descriptor = new ArtifactDescriptor("koncept.http", "koncept-legacy-mod", "7");
 		ArtifactResolutionPoint resolved = repo.resolve(descriptor);		
 		assertThat(resolved, notNullValue());
 		assertThat(resolved.getDescriptor(), is(descriptor));
 		
-		assertThat(resolved.getParent().toString(), is("koncept.pheidippides:pheidippides-parent:1.0-SNAPSHOT"));
+		assertThat(resolved.getParent().toString(), is("koncept-legacy-mod:7"));
 
 		//main, sources and javadoc should be available
 		Collection<ArtifactResource> resources = resolved.getResources();
@@ -58,9 +71,7 @@ public class HttpRepositoryIT {
 		assertThat(lister, notNullValue());
 		LocationListing location = lister.getRootSearchLocation();
 		
-		dump(location);
-//		System.out.println(location.getListingPath());
-		
+//		dump(location);
 		
 		
 	}

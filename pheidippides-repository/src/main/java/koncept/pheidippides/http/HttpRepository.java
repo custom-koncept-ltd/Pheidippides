@@ -3,17 +3,22 @@ package koncept.pheidippides.http;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.net.Socket;
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.net.UnknownHostException;
+
+import javax.xml.stream.XMLStreamException;
 
 import koncept.pheidippides.ArtifactDescriptor;
 import koncept.pheidippides.ArtifactLister;
 import koncept.pheidippides.ArtifactResolutionPoint;
 import koncept.pheidippides.Repository;
+import koncept.pheidippides.artifact.DefaultArtifactResolutionPoint;
+import koncept.pheidippides.artifact.MavenPomDescriptor;
 import koncept.pheidippides.http.lister.SimpleHtmlLister;
 import koncept.pheidippides.listing.ContentListing;
 
-import org.apache.http.HttpClientConnection;
 import org.apache.http.HttpEntity;
 import org.apache.http.HttpException;
 import org.apache.http.HttpResponse;
@@ -56,7 +61,6 @@ public class HttpRepository implements Repository {
 
 	private HttpRequestExecutor requestExecutor;
 	private HttpCoreContext context;
-	private HttpClientConnection conn;
 
 	private ArtifactLister artifactLister;
 
@@ -66,8 +70,6 @@ public class HttpRepository implements Repository {
 	public HttpRepository(URI repositoryUri) {
 		this.repositoryUri = repositoryUri;
 
-		conn = new DefaultManagedHttpClientConnection(getClass().getName(),
-				8 * 1024);
 		context = HttpCoreContext.create();
 		requestExecutor = new HttpRequestExecutor();
 		
@@ -79,14 +81,25 @@ public class HttpRepository implements Repository {
 	}
 
 	public ArtifactResolutionPoint resolve(ArtifactDescriptor descriptor) {
-		// TODO Auto-generated method stub
-		return null;
-	}
-
-	public ArtifactResolutionPoint resolveChildModule(
-			ArtifactDescriptor descriptor, String modulePath) {
-		// TODO Auto-generated method stub
-		return null;
+		try {
+			String uri = repositoryUri.toString();
+			String path = descriptor.toPath();
+			String fileName = descriptor.getArtifactId() + "-" + descriptor.getVersion() + ".pom";
+			if (uri.endsWith("/")) path = path.substring(1); //trim the leading slash if required
+			
+			ContentListing content = getContent(uri + path + fileName);
+			MavenPomDescriptor pomDescriptor = new MavenPomDescriptor(content.location(), content.openStream());
+			
+			if (!descriptor.equals(pomDescriptor.getDescriptor()))
+				throw new RuntimeException("unexpected artifact descriptor: got " + pomDescriptor.getDescriptor() + " but expected " + descriptor);
+			return new DefaultArtifactResolutionPoint(artifactLister, new URI(uri + path), pomDescriptor);
+		} catch (XMLStreamException e) {
+			throw new RuntimeException(e);
+		} catch (IOException e) {
+			throw new RuntimeException(e);
+		} catch (URISyntaxException e) {
+			throw new RuntimeException(e);
+		}
 	}
 
 	public boolean isListableRepository() {
@@ -126,8 +139,11 @@ public class HttpRepository implements Repository {
 
 	public ContentListing getContent(final String uri) {
 		HttpRequestBase request = new HttpGet(uri);
-
+		DefaultManagedHttpClientConnection conn = null;
 		try {
+			URI url = new URI(uri);
+			conn = newConnection(url.getHost(), url.getPort());
+			
 			HttpResponse response = requestExecutor.execute(request, conn,
 					context);
 
@@ -161,13 +177,25 @@ public class HttpRepository implements Repository {
 			throw new RuntimeException(e);
 		} catch (HttpException e) {
 			throw new RuntimeException(e);
+		} catch (URISyntaxException e) {
+			throw new RuntimeException(e);
+		} finally {
+			if (conn != null) try {
+				conn.close();
+			} catch (IOException e) {
+				throw new RuntimeException(e);
+			}
 		}
 	}
 
 	protected Document httpCommonsGet(String uri) {
 		HttpRequestBase request = new HttpGet(uri);
+		DefaultManagedHttpClientConnection conn = null;
 
 		try {
+			URI url = new URI(uri);
+			conn = newConnection(url.getHost(), url.getPort());
+			
 			HttpResponse response = requestExecutor.execute(request, conn,
 					context);
 
@@ -181,6 +209,29 @@ public class HttpRepository implements Repository {
 		} catch (IOException e) {
 			throw new RuntimeException(e);
 		} catch (HttpException e) {
+			throw new RuntimeException(e);
+		} catch (URISyntaxException e) {
+			throw new RuntimeException(e);
+		} finally {
+			if (conn != null) try {
+				conn.close();
+			} catch (IOException e) {
+				throw new RuntimeException(e);
+			}
+		}
+	}
+	
+	private DefaultManagedHttpClientConnection newConnection(String host, int port) {
+		if (port == -1)
+			port = 80;
+		try {
+			DefaultManagedHttpClientConnection conn = new DefaultManagedHttpClientConnection(getClass().getName(), 8 * 1024);
+			Socket socket = new Socket(host, port);
+			conn.bind(socket);
+			return conn;
+		} catch (UnknownHostException e) {
+			throw new RuntimeException(e);
+		} catch (IOException e) {
 			throw new RuntimeException(e);
 		}
 	}
