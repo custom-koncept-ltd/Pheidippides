@@ -3,12 +3,8 @@ package koncept.pheidippides.http;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.net.Socket;
 import java.net.URI;
 import java.net.URISyntaxException;
-import java.net.UnknownHostException;
-
-import javax.xml.stream.XMLStreamException;
 
 import koncept.pheidippides.ArtifactDescriptor;
 import koncept.pheidippides.ArtifactLister;
@@ -20,13 +16,11 @@ import koncept.pheidippides.http.lister.SimpleHtmlLister;
 import koncept.pheidippides.listing.ContentListing;
 
 import org.apache.http.HttpEntity;
-import org.apache.http.HttpException;
 import org.apache.http.HttpResponse;
+import org.apache.http.client.HttpClient;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.methods.HttpRequestBase;
-import org.apache.http.impl.conn.DefaultManagedHttpClientConnection;
-import org.apache.http.protocol.HttpCoreContext;
-import org.apache.http.protocol.HttpRequestExecutor;
+import org.apache.http.impl.client.HttpClients;
 import org.apache.http.util.EntityUtils;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
@@ -58,10 +52,7 @@ public class HttpRepository implements Repository {
 	}
 
 	private final URI repositoryUri;
-
-	private HttpRequestExecutor requestExecutor;
-	private HttpCoreContext context;
-
+	private HttpClient client;
 	private ArtifactLister artifactLister;
 
 	// details on maven index here:
@@ -69,10 +60,6 @@ public class HttpRepository implements Repository {
 
 	public HttpRepository(URI repositoryUri) {
 		this.repositoryUri = repositoryUri;
-
-		context = HttpCoreContext.create();
-		requestExecutor = new HttpRequestExecutor();
-		
 		autodetectParserType();
 	}
 
@@ -87,14 +74,12 @@ public class HttpRepository implements Repository {
 			String fileName = descriptor.getArtifactId() + "-" + descriptor.getVersion() + ".pom";
 			if (uri.endsWith("/")) path = path.substring(1); //trim the leading slash if required
 			
-			ContentListing content = getContent(uri + path + fileName);
+			ContentListing content = getContent(uri + path + fileName, fileName);
 			MavenPomDescriptor pomDescriptor = new MavenPomDescriptor(content.location(), content.openStream());
 			
 			if (!descriptor.equals(pomDescriptor.getDescriptor()))
 				throw new RuntimeException("unexpected artifact descriptor: got " + pomDescriptor.getDescriptor() + " but expected " + descriptor);
 			return new DefaultArtifactResolutionPoint(artifactLister, new URI(uri + path), pomDescriptor);
-		} catch (XMLStreamException e) {
-			throw new RuntimeException(e);
 		} catch (IOException e) {
 			throw new RuntimeException(e);
 		} catch (URISyntaxException e) {
@@ -137,15 +122,12 @@ public class HttpRepository implements Repository {
 		}
 	}
 
-	public ContentListing getContent(final String uri) {
+	public ContentListing getContent(final String uri, final String name) {
 		HttpRequestBase request = new HttpGet(uri);
-		DefaultManagedHttpClientConnection conn = null;
 		try {
-			URI url = new URI(uri);
-			conn = newConnection(url.getHost(), url.getPort());
+			HttpClient client = getClient();
 			
-			HttpResponse response = requestExecutor.execute(request, conn,
-					context);
+			HttpResponse response = client.execute(request);
 
 			// response.getStatusLine().getStatusCode()
 
@@ -161,10 +143,6 @@ public class HttpRepository implements Repository {
 					}
 				}
 				public String name() {
-					String name = "";
-					int lastIndex = uri.lastIndexOf("/");
-					if (lastIndex > 0 && lastIndex < uri.length())
-						name = uri.substring(lastIndex + 1);
 					return name;
 				}
 				public InputStream openStream() throws IOException {
@@ -175,65 +153,14 @@ public class HttpRepository implements Repository {
 
 		} catch (IOException e) {
 			throw new RuntimeException(e);
-		} catch (HttpException e) {
-			throw new RuntimeException(e);
-		} catch (URISyntaxException e) {
-			throw new RuntimeException(e);
-		} finally {
-			if (conn != null) try {
-				conn.close();
-			} catch (IOException e) {
-				throw new RuntimeException(e);
-			}
-		}
-	}
-
-	protected Document httpCommonsGet(String uri) {
-		HttpRequestBase request = new HttpGet(uri);
-		DefaultManagedHttpClientConnection conn = null;
-
-		try {
-			URI url = new URI(uri);
-			conn = newConnection(url.getHost(), url.getPort());
-			
-			HttpResponse response = requestExecutor.execute(request, conn,
-					context);
-
-			// response.getStatusLine().getStatusCode()
-
-			HttpEntity responseEntity = response.getEntity();
-			String html = EntityUtils.toString(responseEntity);
-
-			return Jsoup.parse(html);
-
-		} catch (IOException e) {
-			throw new RuntimeException(e);
-		} catch (HttpException e) {
-			throw new RuntimeException(e);
-		} catch (URISyntaxException e) {
-			throw new RuntimeException(e);
-		} finally {
-			if (conn != null) try {
-				conn.close();
-			} catch (IOException e) {
-				throw new RuntimeException(e);
-			}
 		}
 	}
 	
-	private DefaultManagedHttpClientConnection newConnection(String host, int port) {
-		if (port == -1)
-			port = 80;
-		try {
-			DefaultManagedHttpClientConnection conn = new DefaultManagedHttpClientConnection(getClass().getName(), 8 * 1024);
-			Socket socket = new Socket(host, port);
-			conn.bind(socket);
-			return conn;
-		} catch (UnknownHostException e) {
-			throw new RuntimeException(e);
-		} catch (IOException e) {
-			throw new RuntimeException(e);
-		}
+	private HttpClient getClient() {
+		if (client == null) client = HttpClients.custom()
+				.setUserAgent("koncept.pheidippides/1.0-SNAPSHOT")
+				.build();
+		return client;
 	}
 
 }

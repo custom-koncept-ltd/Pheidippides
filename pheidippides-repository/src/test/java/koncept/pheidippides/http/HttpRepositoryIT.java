@@ -40,7 +40,7 @@ dump /koncept/http/koncept-legacy-mod/7/  http://repository.custom-koncept.co.uk
 		assertThat(resolved, notNullValue());
 		assertThat(resolved.getDescriptor(), is(descriptor));
 		
-		assertThat(resolved.getParent().toString(), is("koncept-legacy-mod:7"));
+		assertThat(resolved.getParent().toString(), is("koncept.http:koncept.http-parent:1.0-SNAPSHOT"));
 
 		//main, sources and javadoc should be available
 		Collection<ArtifactResource> resources = resolved.getResources();

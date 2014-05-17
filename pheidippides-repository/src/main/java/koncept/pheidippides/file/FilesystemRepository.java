@@ -3,9 +3,8 @@ package koncept.pheidippides.file;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
+import java.io.IOException;
 import java.net.URI;
-
-import javax.xml.stream.XMLStreamException;
 
 import koncept.pheidippides.ArtifactDescriptor;
 import koncept.pheidippides.ArtifactLister;
@@ -69,7 +68,7 @@ public class FilesystemRepository implements Repository, ArtifactLister {
 			return new DefaultArtifactResolutionPoint(this, dir.toURI(), pomDescriptor);
 		} catch (FileNotFoundException e) {
 			throw new RuntimeException(e);
-		} catch (XMLStreamException e) {
+		} catch (IOException e) {
 			throw new RuntimeException(e);
 		}
 	}

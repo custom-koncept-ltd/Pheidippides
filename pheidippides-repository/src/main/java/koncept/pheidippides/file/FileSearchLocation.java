@@ -12,8 +12,6 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Properties;
 
-import javax.xml.stream.XMLStreamException;
-
 import koncept.pheidippides.ArtifactDescriptor;
 import koncept.pheidippides.artifact.MavenPomDescriptor;
 import koncept.pheidippides.artifact.MavenVersionMetadata;
@@ -42,7 +40,7 @@ public class FileSearchLocation implements LocationListing {
 		return found;
 	}
 
-	public MavenVersionMetadata getMavenLocalMetadata() throws FileNotFoundException, XMLStreamException {
+	public MavenVersionMetadata getMavenLocalMetadata() throws FileNotFoundException, IOException {
 		File localMetadata = new File(dir, "XXXmaven-metadata-local.xml"); //uh: the -local is the repo name
 		if (localMetadata.exists())
 			return new MavenVersionMetadata(localMetadata.toURI(), new FileInputStream(localMetadata));
@@ -153,8 +151,6 @@ public class FileSearchLocation implements LocationListing {
 			}
 		} catch (FileNotFoundException e) {
 			throw new RuntimeException(e);
-		} catch (XMLStreamException e) {
-//				throw new RuntimeException(e); //swallow for now
 		} catch (IOException e) {
 			throw new RuntimeException(e);
 		}

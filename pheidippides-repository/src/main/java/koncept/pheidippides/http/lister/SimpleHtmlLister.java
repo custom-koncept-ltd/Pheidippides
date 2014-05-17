@@ -30,8 +30,8 @@ public class SimpleHtmlLister implements ArtifactLister {
 		return repo.getRepositoryUri();
 	}
 	
-	public ContentListing getContent(String uri) {
-		return repo.getContent(uri);
+	public ContentListing getContent(String uri, String name) {
+		return repo.getContent(uri, name);
 	}
 	
 	public LocationListing getRootSearchLocation() {
@@ -111,7 +111,7 @@ public class SimpleHtmlLister implements ArtifactLister {
 		
 		public ContentListing getContents(String name) {
 			String contentLocation = getLocation().toString();
-			return getContent(contentLocation + name);
+			return getContent(contentLocation + name, name);
 		}
 		
 	}
