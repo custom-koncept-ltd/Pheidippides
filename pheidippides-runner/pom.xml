@@ -25,6 +25,12 @@
 			<artifactId>pheidippides-repository</artifactId>
 			<version>1.0-SNAPSHOT</version>
 		</dependency>
+		
+		<dependency>
+			<groupId>koncept.classloader</groupId>
+			<artifactId>classloader</artifactId>
+			<version>1.0-SNAPSHOT</version>
+		</dependency>
 	    
 		<dependency>
 			<groupId>junit</groupId>
