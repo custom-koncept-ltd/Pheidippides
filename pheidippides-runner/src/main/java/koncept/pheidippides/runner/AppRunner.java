@@ -105,8 +105,7 @@ public class AppRunner {
 			}
 			
 		}
-		KonceptClassLoader kcl = new KonceptClassLoader(null, classpath);
-		
+		KonceptClassLoader kcl = KonceptClassLoader.forLocations(classpath);
 		
 		Class c = kcl.loadClass(mainClass);
 		Method main = c.getMethod("main", String[].class);
